@@ -1,0 +1,126 @@
+############################################
+# 0) 前置说明（当前代码行为）
+# - rokae_assembly_real/config.py 已是：
+#   - USE_POSE_REWARD=False（不再用 REWARD_THRESHOLD 判成功）
+#   - classifier_keys=["side","wrist1","wrist2"]（三视角分类器）
+# - 现在成功判定主要来自分类器输出
+############################################
+
+
+############################################
+# 1) 启动真机链路（一直保持运行）
+############################################
+
+# 终端1：Rokae实时控制
+source /home/user/qingyu/robot/Rokae_Ros2_ws_25/install/setup.bash
+ros2 launch real_time_control real_time_control.launch.py
+
+# 终端2：力传感器
+source /home/user/qingyu/robot/Force_Sensor/install/setup.bash
+ros2 launch force_sensor_driver force_sensor.launch.py
+
+# 终端3：ROS2->HTTP桥（给hil-serl用）
+cd /home/user/code/hil-serl/serl_robot_infra/robot_servers
+bash launch_rokae_server.sh
+
+
+裁减ROI
+conda activate hilserl
+cd /home/user/code/hil-serl
+python3 tools/capture_realsense_config_images.py
+
+python3 tools/select_image_crop_roi.py
+
+
+############################################
+# 2) 采集二元奖励分类器数据（正负样本）
+############################################
+
+# 终端4
+cd /home/user/code/hil-serl
+export PYTHONPATH=/home/user/code/hil-serl:$PYTHONPATH
+export CUDA_ROOT=/usr/local/cuda
+python examples/record_success_fail.py --exp_name=rokae_assembly_real --successes_needed=300
+
+# 说明：
+# - 默认每步先记为负样本
+# - 你用 SpaceMouse 操作，到了“成功状态”按空格，
+#   当前 transition 记为正样本
+# - 生成数据目录：./classifier_data
+
+
+############################################
+# 3) 训练二元奖励分类器（三视角）
+############################################
+
+cd /home/user/code/hil-serl
+
+export PYTHONPATH=/home/user/code/hil-serl:$PYTHONPATH
+export CUDA_ROOT=/usr/local/cuda
+
+python3 examples/train_reward_classifier.py \
+  --exp_name=rokae_assembly_real \
+  --num_epochs=150 \
+  --batch_size=256
+
+
+# 输出权重目录：./classifier_ckpt
+# 说明：该训练会按 config.classifier_keys 读取三路图像（side/wrist1/wrist2）
+
+# 如果首次下载resnet10失败，可放到：
+# ~/.serl/resnet10_params.pkl
+# （源文件可用 examples/experiments/resnet10_params.pkl）
+
+
+############################################
+# 4) 采示教数据（依赖 classifier_ckpt）
+############################################
+
+cd /home/user/code/hil-serl/examples/experiments/rokae_assembly_real
+export PYTHONPATH=/home/user/code/hil-serl:$PYTHONPATH
+export CUDA_ROOT=/usr/local/cuda
+
+python3 ../../record_demos.py --exp_name=rokae_assembly_real --successes_needed=20
+
+
+# 输出示教文件目录：./demo_data
+
+
+############################################
+# 5) 训练策略（RLPD：learner + actor）
+############################################
+
+# 终端5：learner
+cd /home/user/code/hil-serl/examples/experiments/rokae_assembly_real
+export XLA_PYTHON_CLIENT_PREALLOCATE=false
+export XLA_PYTHON_CLIENT_MEM_FRACTION=.3
+python3 ../../train_rlpd.py \
+  --exp_name=rokae_assembly_real \
+  --checkpoint_path=/home/user/code/hil-serl/outputs/rokae_assembly_real_run2 \
+  --demo_path=/home/user/code/hil-serl/examples/experiments/rokae_assembly_real/demo_data/你的demo文件.pkl \
+  --learner
+
+# 终端6：actor
+cd /home/user/code/hil-serl/examples/experiments/rokae_assembly_real
+export XLA_PYTHON_CLIENT_PREALLOCATE=false
+export XLA_PYTHON_CLIENT_MEM_FRACTION=.1
+python3 ../../train_rlpd.py \
+  --exp_name=rokae_assembly_real \
+  --checkpoint_path=/home/user/code/hil-serl/outputs/rokae_assembly_real_run2 \
+  --actor
+
+
+推理
+cd /home/user/code/hil-serl/examples/experiments/rokae_assembly_real
+
+export PYTHONPATH=/home/user/code/hil-serl:$PYTHONPATH
+export CUDA_ROOT=/usr/local/cuda
+export XLA_PYTHON_CLIENT_PREALLOCATE=false
+export XLA_PYTHON_CLIENT_MEM_FRACTION=.3
+
+python3 ../../train_rlpd.py \
+  --exp_name=rokae_assembly_real \
+  --checkpoint_path=/home/user/code/hil-serl/outputs/rokae_assembly_real_0514 \
+  --actor \
+  --eval_checkpoint_step=50000 \
+  --eval_n_trajs=20

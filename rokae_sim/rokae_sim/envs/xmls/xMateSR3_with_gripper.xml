@@ -1,0 +1,153 @@
+<mujoco model="xMateSR3">
+  <compiler angle="radian" autolimits="true" balanceinertia="true"/>
+
+  <default>
+    <default class="xmate">
+      <joint damping="1" armature="0.05" range="-3.1416 3.1416" axis="0 0 1"/>
+      <default class="visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="2" rgba="1 1 1 1"/>
+      </default>
+<!--      <default class="collision">-->
+<!--        <geom type="mesh" group="3"/>-->
+<!--      </default>-->
+          <!-- 碰撞：接触模型、摩擦、解算器参数都在这 -->
+      <default class="collision">
+        <geom type="mesh"
+              group="3"
+              contype="1" conaffinity="1"
+              condim="6"
+              friction="1.0 0.01 0.0002"
+              margin="0.0002"
+              solref="0.0015 1"
+              solimp="0.98 0.998 0.0003"/>
+      </default>
+      <site size="0.003" rgba="0.5 0.5 0.5 0.3" group="4"/>
+    </default>
+  </default>
+
+  <asset>
+    <material name="white" rgba="1 1 1 1"/>
+    <mesh name="xMateSR3_base_v"  file="rokae_SR3/meshes/xMateSR3_base.stl"  scale="0.001 0.001 0.001"/>
+    <mesh name="xMateSR3_link1_v" file="rokae_SR3/meshes/xMateSR3_link1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="xMateSR3_link2_v" file="rokae_SR3/meshes/xMateSR3_link2.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="xMateSR3_link3_v" file="rokae_SR3/meshes/xMateSR3_link3.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="xMateSR3_link4_v" file="rokae_SR3/meshes/xMateSR3_link4.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="xMateSR3_link5_v" file="rokae_SR3/meshes/xMateSR3_link5.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="xMateSR3_link6_v" file="rokae_SR3/meshes/xMateSR3_link6.stl" scale="0.001 0.001 0.001"/>
+
+    <!-- 你的夹爪 STL（米） -->
+    <material name="gripper_mat" rgba="0.89804 0.91765 0.92941 1"/>
+    <mesh name="gripper_base_link" file="gripper/meshes/base_link.STL" scale="1 1 1"/>
+  </asset>
+
+  <worldbody>
+    <body name="base" childclass="xmate">
+      <geom mesh="xMateSR3_base_v" class="visual"/>
+      <geom mesh="xMateSR3_base_v" class="collision"/>
+
+      <body name="link1" pos="0 0 0.344">
+        <inertial mass="3.0911" pos="2.1631e-05 -0.008233 0.258353" diaginertia="0.292418 0.292418 0.292418"/>
+        <joint name="xmate_joint_1" axis="0 0 1" range="-3.1416 3.1416"/>
+        <site name="joint1_site"/>
+        <geom mesh="xMateSR3_link1_v" class="visual"/>
+        <geom mesh="xMateSR3_link1_v" class="collision"/>
+
+        <body name="link2">
+          <inertial mass="3.3329" pos="-0.0181296 -0.0702216 0.142541" diaginertia="0.318186 0.318186 0.318186"/>
+          <joint name="xmate_joint_2" axis="0 1 0" range="-2.35619 2.268927"/>
+          <site name="joint2_site"/>
+          <geom mesh="xMateSR3_link2_v" class="visual"/>
+          <geom mesh="xMateSR3_link2_v" class="collision"/>
+
+          <body name="link3" pos="0.05 0 0.29">
+            <inertial mass="1.63969" pos="0.0250174 0.0114091 0.0406668" diaginertia="0.162596 0.162596 0.162596"/>
+            <joint name="xmate_joint_3" axis="0 -1 0" range="-3.0528 2.35619"/>
+            <site name="joint3_site"/>
+            <geom mesh="xMateSR3_link3_v" class="visual"/>
+            <geom mesh="xMateSR3_link3_v" class="collision"/>
+
+            <body name="link4" pos="-0.05 0 0.29">
+              <inertial mass="1.87289" pos="-2.5646e-05 -0.011012 -0.071574" diaginertia="0.0857953 0.0857953 0.0857953"/>
+              <joint name="xmate_joint_4" axis="0 0 1" range="-3.0528 3.0528"/>
+              <site name="joint4_site"/>
+              <geom mesh="xMateSR3_link4_v" class="visual"/>
+              <geom mesh="xMateSR3_link4_v" class="collision"/>
+
+              <body name="link5" pos="0 0.136 0">
+                <inertial mass="1.57672" pos="-3.734e-06 0.029264 0.00791249" diaginertia="0.0802627 0.0802627 0.0802627"/>
+                <joint name="xmate_joint_5" axis="0 -1 0" range="-3.0528 3.0528"/>
+                <site name="joint5_site"/>
+                <geom mesh="xMateSR3_link5_v" class="visual"/>
+                <geom mesh="xMateSR3_link5_v" class="collision"/>
+
+                <body name="link6" pos="0 0 0.1035">
+                  <inertial mass="0.651689" pos="0.00052603 -0.000352657 -0.0442745" diaginertia="0.0771354 0.0771354 0.0771354"/>
+                  <joint name="xmate_joint_6" axis="0 0 1" range="-3.0528 3.0528"/>
+                  <site name="joint6_site"/>
+                  <geom mesh="xMateSR3_link6_v" class="visual"/>
+                  <geom mesh="xMateSR3_link6_v" class="collision"/>
+
+
+                  <body name="gripper_mount" pos="0 0 0" quat="-0.3826834 0 0 0.9238795">
+                    <!-- 显式惯量：给个小而正定的值；按你的夹具估算再调更好 -->
+                    <inertial mass="0.40" pos="0 0 0.06" diaginertia="0.001 0.001 0.001"/>
+
+                    <!-- 可视网格：不计质量（mass=0），避免与上面的惯量重复或退化 -->
+                    <geom name="gripper_visual" class="visual" mesh="gripper_base_link"
+                          material="gripper_mat" mass="0" pos="0 0 0" quat="1 0 0 0"/>
+
+                    <!-- 碰撞网格：同样不计质量 -->
+                    <geom name="gripper_collision" class="collision" mesh="gripper_base_link"
+                          mass="0" pos="0 0 0" quat="1 0 0 0"/>
+
+                    <!-- 可选：TCP 估计点 -->
+                    <site name="tcp" pos="0 0 0.12" size="0.005" rgba="0.2 0.8 0.2 0.6"/>
+                  </body>
+
+
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <contact>
+    <exclude body1="link1" body2="link2"/>
+    <exclude body1="link2" body2="link3"/>
+    <exclude body1="link3" body2="link4"/>
+    <exclude body1="link4" body2="link5"/>
+    <exclude body1="link5" body2="link6"/>
+    <!-- 如 STL 与腕部有轻微重叠，可取消相碰：
+    <exclude body1="gripper_mount" body2="link6"/> -->
+  </contact>
+
+  <actuator>
+    <motor class="xmate" name="m1" joint="xmate_joint_1" ctrlrange="-50 50"/>
+    <motor class="xmate" name="m2" joint="xmate_joint_2" ctrlrange="-50 50"/>
+    <motor class="xmate" name="m3" joint="xmate_joint_3" ctrlrange="-50 50"/>
+    <motor class="xmate" name="m4" joint="xmate_joint_4" ctrlrange="-30 30"/>
+    <motor class="xmate" name="m5" joint="xmate_joint_5" ctrlrange="-20 20"/>
+    <motor class="xmate" name="m6" joint="xmate_joint_6" ctrlrange="-20 20"/>
+  </actuator>
+
+  <sensor>
+    <jointpos name="j1_q" joint="xmate_joint_1"/>
+    <jointpos name="j2_q" joint="xmate_joint_2"/>
+    <jointpos name="j3_q" joint="xmate_joint_3"/>
+    <jointpos name="j4_q" joint="xmate_joint_4"/>
+    <jointpos name="j5_q" joint="xmate_joint_5"/>
+    <jointpos name="j6_q" joint="xmate_joint_6"/>
+
+    <jointvel name="j1_dq" joint="xmate_joint_1"/>
+    <jointvel name="j2_dq" joint="xmate_joint_2"/>
+    <jointvel name="j3_dq" joint="xmate_joint_3"/>
+    <jointvel name="j4_dq" joint="xmate_joint_4"/>
+    <jointvel name="j5_dq" joint="xmate_joint_5"/>
+    <jointvel name="j6_dq" joint="xmate_joint_6"/>
+
+    <torque name="wrist_torque" site="joint6_site"/>
+  </sensor>
+</mujoco>

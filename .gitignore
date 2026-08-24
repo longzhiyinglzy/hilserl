@@ -1,0 +1,49 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Virtual environments and local environment files
+.venv/
+venv/
+env/
+.env
+.env.*
+
+# IDE and local agent settings
+.idea/
+.vscode/
+.agents/
+.codex
+
+# Runtime output, logs, and temporary files
+outputs/
+output/
+logs/
+*.log
+*.tmp
+
+# Experiment data and serialized replay/demo buffers
+0513/
+classifier_data/
+demo_data/
+*.pkl
+*.pickle
+
+# Trained model artifacts and checkpoints
+classifier_ckpt/
+checkpoint_*/
+checkpoints/
+*.ckpt
+*.pt
+*.pth
+
+# OS metadata
+.DS_Store
+Thumbs.db
